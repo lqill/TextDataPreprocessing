@@ -1,43 +1,60 @@
 import pandas as pd
-import textdistance as td
+# preprocessing
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+
+# filtering
+from nltk.corpus import words as nltk_words
+
+# cleaning
 import re
 import string
-from nltk.corpus import words
+
+# modeling
+from sklearn.preprocessing import LabelEncoder
+
+# TODO: print function output like data lenght before/after or may removed or anything like function done or other output
+# TODO: modelling need more or gonna be moved to a seperate file with text conversion or crossdata
 
 
 class preprocessing():
-    def stem(self, data):
-        """
-        cut words into efficiet to understand by computer
-        """
-        pass
+    # This function contain lemmatiation, Stemmer, and StopWords removal
+    stemmer = PorterStemmer()
+    lemmatizer = WordNetLemmatizer()
+    stop_words = set(stopwords.words())
 
-    def lemmi(self, data):
-        """
-        convert words into a single base word
-        """
-        pass
+    def token(self, text):
+        return word_tokenize(text)
 
-    def funcname(self, parameter_list):
-        """
-        docstring
-        """
-        pass
+    def stem(self, text):
+        return [self.stemmer.stem(w) for w in self.token(text)]
+
+    def lemmi(self, text):
+        return [self.lemmatizer.lemmatize(w) for w in self.token(text)]
+
+    def stopword(self, text):
+        return [w for w in self.token(text) if w not in self.stop_words]
+
+    def do_all(self, dataframe, column_name):
+        dataframe[column_name] = dataframe[column_name].apply(
+            lambda text: self.stem(self.lemmi(self.stopword(self.token(text)))))
+        return dataframe
 
 
 class filtering():
     # word_filters can be adjuster to a set of choosen language
-    word_filters = set(words.words())
+    word_filters = set(nltk_words.words())
     custom = []
     custom_filters = set([])
 
     def add_custom_words(self, list_of_words):
         # for adding custom words to filter
-        custom.extend(list_of_words)
-        custom_filters = set(custom)
+        self.custom.extend(list_of_words)
+        self.custom_filters = set(custom)
 
     def reset_custom_words(self):
-        custom_filters = set([])
+        self.custom_filters = set([])
 
     def more_english(self, text):
         # ignore this function, this is needed for func english only filter
@@ -53,30 +70,29 @@ class filtering():
         else:
             return False
 
-    def english_only(self, data, col_name):
-        '''
-        data => dataframe that will be filtered
-        col_name => the column name which the filter will be based on
-        The dataFrame will be filtered by nltk words collection.Meaning, it is based on nltk words.words
-        '''
-        data["english"] = data[col_name].apply(more_english)
-        data = data[data["english"]]
-        data = data.drop(["english"], axis=1)
-        return data
+    def english_only(self, dataframe, column_name):
+        # dataframe => dataframe that will be filtered
+        # col_name => the column name which the filter will be based on
+        # The dataFrame will be filtered by nltk words collection.Meaning, it is based on nltk words.words
+        dataframe["english"] = dataframe[column_name].apply(self.more_english)
+        dataframe = dataframe[dataframe["english"]]
+        dataframe = dataframe.drop(["english"], axis=1)
+        return dataframe
 
     def filter_on(self, text):
         words_in_text = text.split(" ")
         for word in words_in_text:
-            if word in custom_filters:
+            if word not in custom_filters:
                 return True
             else:
                 return False
 
-    def filter(self, data, col_name):
-        data["filter"] = data[col_name].apply(filter_on)
-        data = data[data["filter"]]
-        data = data.drop(["filter"], axis=1)
-        return data
+    def filter(self, dataframe, col_name):
+        # filtering dataframe so the resulting dataframe contain no dataframe
+        dataframe["filter"] = dataframe[col_name].apply(self.filter_on)
+        dataframe = dataframe[dataframe["filter"]]
+        dataframe = dataframe.drop(["filter"], axis=1)
+        return dataframe
 
 
 class cleaning():
@@ -92,14 +108,24 @@ class cleaning():
         # remove whitespace
         return text.strip()
 
-    def all(self, text):
+    def do_all(self, text):
         # all of the above and lower too
         text = text.lower()
-        text = number(text)
-        text = punctuation(text)
-        text = whitespace(text)
+        text = self.number(text)
+        text = self.punctuation(text)
+        text = self.whitespace(text)
         return text
 
 
 class modeling():
-    pass
+    le = LabelEncoder()
+
+    def label_encode(self, dataframe):
+        dataframe["id"] = le.fit_transform(dataframe["id"])
+
+
+# debugging text
+text = "i am going to buy some unused car and writing this letter seems like a waste of time for me"
+print("start debugging")
+print("breakpoint")
+print("done debugging")

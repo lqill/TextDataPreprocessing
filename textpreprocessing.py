@@ -14,15 +14,16 @@ import string
 # modeling
 from sklearn.preprocessing import LabelEncoder
 
-# TODO: print function output like data lenght before/after or may removed or anything like function done or other output
+# TODO: print function output like data length before/after or may removed or anything like function done or other output
 # TODO: modelling need more or gonna be moved to a seperate file with text conversion or crossdata
 
 
-class preprocessing():
+class preprocessing:
     # This function contain lemmatiation, Stemmer, and StopWords removal
-    stemmer = PorterStemmer()
-    lemmatizer = WordNetLemmatizer()
-    stop_words = set(stopwords.words())
+    def __init__(self):
+        self.stemmer = PorterStemmer()
+        self.lemmatizer = WordNetLemmatizer()
+        self.stop_words = set(stopwords.words())
 
     def token(self, text):
         return word_tokenize(text)
@@ -36,17 +37,18 @@ class preprocessing():
     def stopword(self, text):
         return [w for w in self.token(text) if w not in self.stop_words]
 
-    def do_all(self, dataframe, column_name):
+    def all(self, dataframe, column_name):
         dataframe[column_name] = dataframe[column_name].apply(
             lambda text: self.stem(self.lemmi(self.stopword(self.token(text)))))
         return dataframe
 
 
-class filtering():
+class filtering:
     # word_filters can be adjuster to a set of choosen language
-    word_filters = set(nltk_words.words())
-    custom = []
-    custom_filters = set([])
+    def __init__(self):
+        self.word_filters = set(nltk_words.words())
+        self.custom = []
+        self.custom_filters = set([])
 
     def add_custom_words(self, list_of_words):
         # for adding custom words to filter
@@ -71,12 +73,14 @@ class filtering():
             return False
 
     def english_only(self, dataframe, column_name):
-        # dataframe => dataframe that will be filtered
-        # col_name => the column name which the filter will be based on
         # The dataFrame will be filtered by nltk words collection.Meaning, it is based on nltk words.words
+        before = len(dataframe)
         dataframe["english"] = dataframe[column_name].apply(self.more_english)
         dataframe = dataframe[dataframe["english"]]
         dataframe = dataframe.drop(["english"], axis=1)
+        dataframe = dataframe.reset_index(Drop=True)
+        after = len(dataframe)
+        print("FILTER done. {} -> {} , {}removed".format(before, after, before-after))
         return dataframe
 
     def filter_on(self, text):
@@ -89,13 +93,17 @@ class filtering():
 
     def filter(self, dataframe, col_name):
         # filtering dataframe so the resulting dataframe contain no dataframe
+        before = len(dataframe)
         dataframe["filter"] = dataframe[col_name].apply(self.filter_on)
         dataframe = dataframe[dataframe["filter"]]
         dataframe = dataframe.drop(["filter"], axis=1)
+        dataframe = dataframe.reset_index(Drop=True)
+        after = len(dataframe)
+        print("FILTER done. {} -> {} , {}removed".format(before, after, before-after))
         return dataframe
 
 
-class cleaning():
+class cleaning:
     def number(self, text):
         # remove number
         return re.sub(r'\d+', '', text.lower())
@@ -108,7 +116,7 @@ class cleaning():
         # remove whitespace
         return text.strip()
 
-    def do_all(self, text):
+    def clean(self, text):
         # all of the above and lower too
         text = text.lower()
         text = self.number(text)
@@ -117,15 +125,24 @@ class cleaning():
         return text
 
 
-class modeling():
-    le = LabelEncoder()
+class modeling:
+    def __init__(self):
+        self.le = LabelEncoder()
 
-    def label_encode(self, dataframe):
-        dataframe["id"] = le.fit_transform(dataframe["id"])
+    def label_encode(self, dataframe, column_name):
+        dataframe[column_name] = self.le.fit_transform(dataframe[column_name])
+        print(dataframe[column_name].value_counts())
+        return dataframe
 
 
-# debugging text
-text = "i am going to buy some unused car and writing this letter seems like a waste of time for me"
-print("start debugging")
-print("breakpoint")
-print("done debugging")
+# debugging
+
+def main():
+    text = "i am going to buy some unused car and writing this letter seems like a waste of time for me"
+    print("start debugging")
+    print("breakpoint")
+    print("done debugging")
+
+
+if __name__ == "__main__":
+    main()

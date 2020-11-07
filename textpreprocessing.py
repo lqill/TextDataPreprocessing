@@ -53,7 +53,7 @@ class filtering:
     def add_custom_words(self, list_of_words):
         # for adding custom words to filter
         self.custom.extend(list_of_words)
-        self.custom_filters = set(custom)
+        self.custom_filters = set(self.custom)
 
     def reset_custom_words(self):
         self.custom_filters = set([])
@@ -63,7 +63,7 @@ class filtering:
         words_in_text = text.split(" ")
         eng_level = 0  # made up english level
         for word in words_in_text:
-            if word in word_filters:
+            if word in self.word_filters:
                 eng_level += 1
             else:
                 eng_level -= 1
@@ -86,7 +86,7 @@ class filtering:
     def filter_on(self, text):
         words_in_text = text.split(" ")
         for word in words_in_text:
-            if word not in custom_filters:
+            if word not in self.custom_filters:
                 return True
             else:
                 return False

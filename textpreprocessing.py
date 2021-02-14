@@ -3,6 +3,7 @@ import pandas as pd
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer, WordNetLemmatizer
+from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 
 # filtering
 from nltk.corpus import words as nltk_words
@@ -20,22 +21,33 @@ from sklearn.preprocessing import LabelEncoder
 
 class preprocessing:
     # This function contain lemmatiation, Stemmer, and StopWords removal
-    def __init__(self):
-        self.stemmer = PorterStemmer()
-        self.lemmatizer = WordNetLemmatizer()
-        self.stop_words = set(stopwords.words())
+    def __init__(self, mode="eng"):
+        print(mode)
+        self.mode = mode
+        if self.mode == "ind":
+            self.stop_words = set(stopwords.words('indonesian'))
+            factory = StemmerFactory()
+            self.stemmer = factory.create_stemmer()
+        else:
+            self.lemmatizer = WordNetLemmatizer()
+            self.stemmer = PorterStemmer()
+            self.stop_words = set(stopwords.words())
 
     def token(self, text):
         return word_tokenize(text)
 
     def stem(self, text):
-        return [self.stemmer.stem(w) for w in self.token(text)]
+        return [self.stemmer.stem(w) for w in text]
 
     def lemmi(self, text):
-        return [self.lemmatizer.lemmatize(w) for w in self.token(text)]
+        if self.mode != "ind":
+            return [self.lemmatizer.lemmatize(w) for w in text]
+        else:
+            return text
 
     def stopword(self, text):
-        return [w for w in self.token(text) if w not in self.stop_words]
+        text=[w for w in text if w not " "]
+        return [w for w in text if w not in self.stop_words]
 
     def all(self, dataframe, column_name):
         dataframe[column_name] = dataframe[column_name].apply(
